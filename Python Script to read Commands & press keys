@@ -1,0 +1,46 @@
+import serial
+from pynput.keyboard import Controller, Key
+import time
+
+keyboard = Controller()
+
+# 🔧 Change COM port as per your system
+ser = serial.Serial('COM6', 9600) //change COM6 with the correct port where bluetooth is connected
+
+print("Orion Stream Deck Ready")
+
+while True:
+    data = ser.read().decode('utf-8')
+
+    if data == 'A':
+        keyboard.press(Key.media_volume_up)
+        keyboard.release(Key.media_volume_up)
+        print("Volume UP")
+
+    elif data == 'B':
+        keyboard.press(Key.media_volume_down)
+        keyboard.release(Key.media_volume_down)
+        print("Volume DOWN")
+
+    elif data == 'C':
+        # 🔁 ALT + TAB (cycle through apps)
+        keyboard.press(Key.alt)
+        time.sleep(0.05)
+
+        for _ in range(3):  # change number to control how far it cycles
+            keyboard.press(Key.tab)
+            keyboard.release(Key.tab)
+            time.sleep(0.1)
+
+        keyboard.release(Key.alt)
+        print("Switch App")
+
+    elif data == 'D':
+        keyboard.press(Key.media_play_pause)
+        keyboard.release(Key.media_play_pause)
+        print("Play / Pause")
+
+    elif data == 'E':
+        keyboard.press(Key.f6)   # OBS Scene Change
+        keyboard.release(Key.f6)
+        print("OBS Scene Change")
