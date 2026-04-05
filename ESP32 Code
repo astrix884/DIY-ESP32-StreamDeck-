@@ -1,0 +1,116 @@
+#include <BluetoothSerial.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+BluetoothSerial SerialBT;
+
+// OLED
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+// Buttons
+int buttons[5] = {13, 12, 14, 27, 26};
+char keys[5] = {'A', 'B', 'C', 'D', 'E'};
+
+// LEDs
+#define LED_BLUE   15
+#define LED_GREEN  2
+#define LED_RED    4
+
+void setup() {
+  Serial.begin(115200);
+  SerialBT.begin("Orion_StreamDeck");
+
+  // Pins
+  for (int i = 0; i < 5; i++)
+    pinMode(buttons[i], INPUT_PULLUP);
+
+  pinMode(LED_BLUE, OUTPUT);
+  pinMode(LED_GREEN, OUTPUT);
+  pinMode(LED_RED, OUTPUT);
+
+  // OLED init
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  display.clearDisplay();
+
+  introAnimation();
+}
+
+void loop() {
+
+  // Bluetooth status
+  if (SerialBT.hasClient()) {
+    digitalWrite(LED_BLUE, HIGH);
+  } else {
+    digitalWrite(LED_BLUE, millis() % 1000 < 500);
+  }
+
+  // Buttons
+  for (int i = 0; i < 5; i++) {
+    if (digitalRead(buttons[i]) == LOW) {
+
+      char k = keys[i];
+      SerialBT.write(k);
+
+      blinkGreen();
+      showKey(k);
+
+      // Example logic
+      if (k == 'A') digitalWrite(LED_RED, HIGH);   // LIVE
+      if (k == 'E') digitalWrite(LED_RED, LOW);    // STOP
+
+      delay(40);
+    }
+  }
+}
+
+// ---------- FUNCTIONS ----------
+
+void introAnimation() {
+  display.setTextSize(3);
+  display.setTextColor(WHITE);
+  display.setCursor(20, 20);
+  display.println("Orion");
+  display.display();
+
+  digitalWrite(LED_BLUE, HIGH);
+  digitalWrite(LED_GREEN, HIGH);
+  digitalWrite(LED_RED, HIGH);
+  delay(300);
+  digitalWrite(LED_BLUE, LOW);
+  digitalWrite(LED_GREEN, LOW);
+  digitalWrite(LED_RED, LOW);
+
+  delay(2000);
+  showStatus();
+}
+
+void showStatus() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.println("ORION STREAM DECK");
+  display.println("----------------");
+  display.println("BT STATUS:");
+  display.println("READY");
+  display.display();
+}
+
+void showKey(char key) {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0, 10);
+  display.println("SENT KEY:");
+  display.setTextSize(3);
+  display.setCursor(50, 30);
+  display.println(key);
+  display.display();
+}
+
+void blinkGreen() {
+  digitalWrite(LED_GREEN, HIGH);
+  delay(120);
+  digitalWrite(LED_GREEN, LOW);
+}
